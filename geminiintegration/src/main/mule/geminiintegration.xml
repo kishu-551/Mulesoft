@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="20bae34b-c95c-4cc9-9310-b1e2f8389431" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="5a6321c5-fdda-47ff-a190-eebaf1b2a5d6" >
+		<http:request-connection host="generativelanguage.googleapis.com" protocol="HTTPS"/>
+	</http:request-config>
+	<flow name="geminiintegrationFlow" doc:id="663b9b67-8491-4160-8ea5-eb9503bc1e28" >
+		<http:listener doc:name="Listener" doc:id="7037d4ec-4fec-4a3a-83ff-f87b9eb61db7" config-ref="HTTP_Listener_config" path="/gemini"/>
+		<logger level="INFO" doc:name="Logger" doc:id="4fa920f9-9869-4ca7-bdd4-fb520da1de8e" />
+		<ee:transform doc:name="Prompt formation" doc:id="5e471f9d-9e6d-4e0f-ba42-b5dc90d3724a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+      "contents": [{
+        "parts":[{
+          "text": payload //your request string to gemini
+          }]}]}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<http:request method="POST" doc:name="GEMINI Connect" doc:id="d6f99d7c-76b2-498b-baf1-ccd9e7019356" config-ref="HTTP_Request_configuration" path="/v1/models/gemini-pro:generateContent">
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	"key" : "AIzaSyCiZf-7PstNpjX7jVkhvVLtcgpoGautUSQ"
+}]]]></http:query-params>
+		</http:request>
+		<ee:transform doc:name="Response formatting" doc:id="25674693-570c-4559-8e4b-a95b184b4daa" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output text/plain
+---
+payload.candidates.content.parts..text[0] default "Sorry no response found"]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="81b6c700-38bd-4fc7-ab63-8e35e9a05203" />
+	</flow>
+</mule>
