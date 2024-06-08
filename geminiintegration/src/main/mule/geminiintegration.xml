@@ -30,7 +30,7 @@ output application/json
 			<http:query-params ><![CDATA[#[output application/java
 ---
 {
-	"key" : "AIzaSyCiZf-7PstNpjX7jVkhvVLtcgpoGautUSQ"
+	"key" : "Sample"
 }]]]></http:query-params>
 		</http:request>
 		<ee:transform doc:name="Response formatting" doc:id="25674693-570c-4559-8e4b-a95b184b4daa" >
